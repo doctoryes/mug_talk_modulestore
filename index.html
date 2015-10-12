@@ -9,6 +9,8 @@
     .scale30 {
       width: 30%;
     }
+    .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    .remark-code-line-highlighted     { background-color: #373832; }
   </style>
   <body>
 <label for="source" class="sr">Slide Deck</label>
@@ -16,24 +18,537 @@
 
 class: title middle left
 
-# edX Modulestore
+# The edX Modulestore
 
-.subtitle[MongoDB MUG: October 19th, 2015]
+.subtitle[Storing edX Courses in MongoDB]
 
-.thirdtitle[Introduction]
-
----
-
-class: title middle right
-
-## Who am I?
-
-.subtitle[John Eskew]
-
-.thirdtitle[Principal Software Engineer - edX - Core Platform Team]
+.thirdtitle[Boston MongoDB User Group: October 19th, 2015]
 
 ---
 
+# Who am I?
+
+
+**John Eskew**
+```
+Principal Software Engineer - edX
+Core Platform Team
+```
+<https://github.com/doctoryes>
+
+---
+
+# What is edX?
+
+<a href="https://docs.google.com/a/edx.org/presentation/d/1oAZ-9USoNKpjesllITqq4jZyx-w34V1nl7jtpMk7nHQ" target="_blank">This is edX...</a>
+
+(Thanks, [nedbat!](http://github.com/nedbat))
+
+---
+
+MongoDB University!
+
+---
+
+class: center
+
+# What is a "modulestore"?
+
+An interface to create and query course content, backed by storage.
+
+The storage used by edX: MongoDB.
+
+---
+
+class: center, middle
+
+**Why does edX store courses in MongoDB?**
+
+---
+
+# edX History
+
+--
+
+- First course: MIT 6.002x
+
+--
+
+- Content coded in XML
+
+--
+
+- Here's an XML course example...
+
+---
+```xml
+<course name="A Simple Course" org="edX" course="simple" graceperiod="1 day 5 hours 59 minutes 59 seconds" slug="2012_Fall">
+  <chapter name="Overview">
+    <video name="Welcome" youtube_id_0_75="izygArpw-Qo" youtube_id_1_0="p2Q6BrNhdh8" youtube_id_1_25="1EeWXzPdhSA" youtube_id_1_5="rABDYkeK0x8"/>
+    <videosequence format="Lecture Sequence" name="A simple sequence">
+      <html name="toylab" filename="toylab"/>
+      <video name="S0V1: Video Resources" youtube_id_0_75="EuzkdzfR0i8" youtube_id_1_0="1bK-WdDi6Qw" youtube_id_1_25="0v1VzoDVUTM" youtube_id_1_5="Bxk_-ZJb240"/>
+    </videosequence>
+    <section name="Lecture 2">
+      <sequential>
+        <video youtube_id_1_0="TBvX7HzxexQ"/>
+        <problem name="L1 Problem 1" points="1" type="lecture" showanswer="attempted" filename="L1_Problem_1" rerandomize="never"/>
+      </sequential>
+    </section>
+  </chapter>
+  <chapter name="Chapter 2" url_name='chapter_2'>
+    <section name="Problem Set 1">
+      <sequential>
+        <problem type="lecture" showanswer="attempted" rerandomize="true" display_name="A simple coding problem" name="Simple coding problem" filename="ps01-simple" url_name="ps01-simple"/>
+      </sequential>
+    </section>
+    <video name="Lost Video" youtube_id_1_0="TBvX7HzxexQ"/>
+    <sequential format="Lecture Sequence" url_name='test_sequence'>
+      <vertical url_name='test_vertical'>
+        <html url_name='test_html'>
+          Foobar
+        </html>
+      </vertical>
+    </sequential>
+  </chapter>
+</course>
+```
+---
+
+# edX History
+
+
+- First course: MIT 6.002x
+
+- Content coded in XML
+
+--
+
+- Subsequent courses were XML-based courses
+
+--
+
+- All XML courses loaded into memory at startup
+
+--
+
+- Works for 10s of courses - but not 100s...
+
+---
+
+INSERT SLIDE ABOUT PROCESS MEM USAGE...
+
+---
+
+# Why MongoDB?
+
+The thinking:
+
+--
+
+We need to load/unload course parts on-demand!
+
+--
+
+So we'll use a database.
+
+--
+
+Hmmm - we've got course information with a varied schema.
+
+--
+
+It'd be nice to store the information without defining a schema.
+
+--
+
+And to be able to query the course information irregardless of the schema.
+
+--
+
+Maybe MongoDB?
+
+---
+
+SHOW A COURSE STRUCTURE - BLOCKS IN A TREE
+
+---
+
+# "Draft" Modulestore
+
+--
+
+Now known as "old Mongo".
+
+--
+
+Stores course modules (XModules).
+
+--
+
+On-demand loading of course modules.
+
+--
+
+Single collection.
+
+--
+
+Each document is a course module.
+
+--
+
+Let's look at the schema...
+
+---
+
+SHOW DOCUMENTS FROM OLD MONGO COLLECTION
+
+---
+
+# Draft Modulestore Problems
+
+--
+
+No versioning
+
+--
+
+A single draft branch and a single published branch
+
+--
+
+Suppose you want to publish several course blocks.
+
+--
+
+Those blocks are copied directly from the draft branch to the published branch.
+
+--
+
+Non-atomic operation to live course material.
+
+--
+
+Last published course version is forever lost.
+
+--
+
+NON-OPTIMAL
+
+---
+
+# Draft Modulestore Problems
+
+--
+
+Optimal for some query patterns
+
+--
+
+Non-optimal for other query patterns
+
+---
+
+# Draft Modulestore Problems
+
+--
+
+"Return a list of all video modules in a course."
+
+--
+
+Algorithm:
+
+--
+
+* Start at the root course node.
+
+--
+
+* Load all children of each node.
+
+--
+
+* If child is video node, add to list and stop.
+
+--
+
+* Else: repeat.
+
+--
+
+Nearly all course modules must be queried.
+
+--
+
+Many MongoDB find queries of a small number of documents on each query.
+
+--
+
+Sure - blocks can be cached (and they are). But adds complexity.
+
+---
+
+class: center, middle
+
+**Time to re-design..**
+
+---
+
+# Draft Versioning Modulestore
+
+a.k.a. Split
+
+--
+
+Optimizes for common course traversal
+
+--
+
+Adds versioning
+
+--
+
+"Split"s out course structure from course content
+
+---
+
+SHOW A DIAGRAM OF STRUCTURE, DEFINITIONS, AND HEAD POINTER
+
+---
+
+# Split Modulestore
+
+--
+
+Three different collections
+
+--
+
+* modulestore.active_versions
+* modulestore.structures
+* modulestore.definitions
+
+---
+
+# modulestore.structures
+
+EXAMPLE OF STRUCTURES DOCUMENT
+
+Entire course structure.
+
+Immutable once created!
+
+---
+
+# modulestore.definitions
+
+EXAMPLE OF DEFINITIONS DOCUMENT
+
+Contains the content of a course block
+
+---
+
+# modulestore.active_versions
+
+EXAMPLE OF ACTIVE_VERSIONS DOCUMENT
+
+Points to course structures representing draft and published versions of the course
+
+---
+
+# Split Modulestore Query Example
+
+--
+
+"Return a list of all video modules in a course."
+
+--
+
+One query for the active_versions document by course id.
+
+--
+
+One query for the course structure document by _id.
+
+--
+
+Traverse the in-memory structure, finding all video modules.
+
+---
+
+# Split Modulestore Course Editing - Details
+
+1. version_structure()
+
+--
+
+* Queries existing structure from MongoDB
+
+--
+
+* Deep-copies the existing structure
+
+--
+
+* Updates its edit_info to tie it to the previous structure.
+
+--
+
+INSERT A PICTURE?
+
+---
+
+# Split Modulestore Course Editing - Details
+
+1. version_structure()
+2. Edit the new structure
+
+--
+
+* Adding/deleting blocks
+
+--
+
+* Adding/deleting metadata
+
+--
+
+* Changing structure
+
+---
+
+# Split Modulestore Course Editing - Details
+
+1. version_structure()
+2. Edit the new structure
+3. update_structure()
+
+--
+
+* Saves the new structure to MongoDB
+
+---
+
+# Split Modulestore Course Editing - Details
+
+1. version_structure()
+2. Edit the new structure
+3. update_structure()
+4. update_course_index()
+
+--
+
+* Updates the course index in the active_versions collection with the new structure ID
+
+--
+
+INSERT A PICTURE?
+
+---
+
+# Problems We've Encountered
+
+--
+
+Structures for large courses have become "large".
+
+--
+
+* Over 1 MB.
+
+--
+
+* Due to some module data being stored there that don't actually need to be there.
+
+--
+
+* Structures were designed to be "small" and queried often.
+
+--
+
+* Not a MongoDB-specific issue - but...
+
+---
+
+# Problems We've Encountered
+
+--
+
+Externally-hosted MongoDB - compose.io
+
+--
+
+* No (easy) access to logs.
+
+--
+
+* Hard / impossible to tune for our usage.
+
+--
+
+* Large structures and many structure queries have caused performance problems at peak loads.
+
+--
+
+* To fix performance issues, we pickle, compress, and cache course structures in memcache.
+
+--
+
+* INSERT GRAPH OF BEFORE & AFTER CHANGE HERE
+
+---
+
+# Problems We've Encountered
+
+--
+
+Split structure version storage
+
+--
+
+* At launch, we had no plan for archiving old structure / definition versions.
+
+--
+
+* We'd deal with it "later".
+
+--
+
+* As stated, structures became "large".
+
+--
+
+* Every course edit copies the existing structure and creates a new one.
+
+--
+
+* After several months, storage became an issue.
+
+--
+
+* QUOTE NUMBERS HERE: SIZE OF MODULESTORE DB & COMPRESSED SIZE WITH WIRED TIGER
+
+---
+
+Concurrent edits
+
+SHOW INTERLEAVED STEPS
+
+DEMONSTRATE PROBLEM
+
+DEMONSTRATE HOW TO FIX
+
+CONFESS THAT PLATFORM SUFFERS FROM ISSUE
+
+---
+
+GridFS
+
+
+
+---
 
 </textarea>
     <script src="http://gnab.github.io/remark/downloads/remark-latest.min.js">
