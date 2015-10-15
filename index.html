@@ -9,7 +9,7 @@
     .scale30 {
       width: 30%;
     }
-    .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; font-size: 0.5em; padding: 0.0em;}
     .remark-code-line-highlighted     { background-color: #373832; }
   </style>
   <body>
@@ -46,7 +46,11 @@ Core Platform Team
 
 ---
 
-MongoDB University!
+# MongoDB University
+
+* Powered by OpenEdx
+
+* [https://university.mongodb.com/](https://university.mongodb.com/)
 
 ---
 
@@ -170,15 +174,19 @@ Maybe MongoDB?
 
 ---
 
-SHOW A COURSE STRUCTURE - BLOCKS IN A TREE
+### edX Course
+
+.float-left.scale50[![Course tree diagram](assets/edx_course.png "edX Course")]
+
+Basically a directed acyclic graph (DAG)...
 
 ---
 
-# "Draft" Modulestore
+# Draft Modulestore
 
 --
 
-Now known as "old Mongo".
+a.k.a "old Mongo Modulestore".
 
 --
 
@@ -194,19 +202,21 @@ Single collection.
 
 --
 
-Each document is a course module.
-
---
-
-Let's look at the schema...
+Each document is a course module/block.
 
 ---
 
-SHOW DOCUMENTS FROM OLD MONGO COLLECTION
+# Draft Modulestore
+
+Let's look at some documents:
+
+* [Video Module](assets/old_mongo_video_doc.txt)
+* [HTML Module](assets/old_mongo_html_doc.txt)
+* [Problem Module](assets/old_mongo_problem_doc.txt)
 
 ---
 
-# Draft Modulestore Problems
+# Draft Modulestore Issues
 
 --
 
@@ -238,7 +248,7 @@ NON-OPTIMAL
 
 ---
 
-# Draft Modulestore Problems
+# Draft Modulestore Issues
 
 --
 
@@ -250,7 +260,7 @@ Non-optimal for other query patterns
 
 ---
 
-# Draft Modulestore Problems
+# Draft Modulestore Issues
 
 --
 
@@ -298,11 +308,11 @@ class: center, middle
 
 # Draft Versioning Modulestore
 
-a.k.a. Split
+a.k.a. Split Mongo Modulestore
 
 --
 
-Optimizes for common course traversal
+Optimizes for frequent course traversal
 
 --
 
@@ -314,7 +324,7 @@ Adds versioning
 
 ---
 
-SHOW A DIAGRAM OF STRUCTURE, DEFINITIONS, AND HEAD POINTER
+.float-left[![Split course diagram](assets/split_course.png "Split Course")]
 
 ---
 
@@ -334,11 +344,17 @@ Three different collections
 
 # modulestore.structures
 
-EXAMPLE OF STRUCTURES DOCUMENT
+--
 
-Entire course structure.
+Each document is an entire course structure.
 
-Immutable once created!
+--
+
+_Immutable_ once created!
+
+--
+
+An example [structure](assets/split_structure.json)
 
 ---
 
@@ -352,9 +368,25 @@ Contains the content of a course block
 
 # modulestore.active_versions
 
-EXAMPLE OF ACTIVE_VERSIONS DOCUMENT
+--
 
-Points to course structures representing draft and published versions of the course
+One document per course
+
+--
+
+Points to course structures
+
+--
+
+* One draft branch structure
+
+--
+
+* One published branch structure
+
+--
+
+An example [active_versions document](assets/split_active_versions.txt).
 
 ---
 
@@ -394,9 +426,9 @@ Traverse the in-memory structure, finding all video modules.
 
 * Updates its edit_info to tie it to the previous structure.
 
---
+---
 
-INSERT A PICTURE?
+.float-left[![Split version_structure() example](assets/clone_structure.png "version_structure()")]
 
 ---
 
@@ -411,11 +443,19 @@ INSERT A PICTURE?
 
 --
 
+or
+
 * Adding/deleting metadata
 
 --
 
+or
+
 * Changing structure
+
+---
+
+.float-left[![Split structure edit example](assets/edit_structure.png "Structure Edit")]
 
 ---
 
@@ -431,6 +471,10 @@ INSERT A PICTURE?
 
 ---
 
+.float-left[![Split structure save example](assets/structure_save.png "Structure Save")]
+
+---
+
 # Split Modulestore Course Editing - Details
 
 1. version_structure()
@@ -442,9 +486,9 @@ INSERT A PICTURE?
 
 * Updates the course index in the active_versions collection with the new structure ID
 
---
+---
 
-INSERT A PICTURE?
+.float-left[![Split structure repoint example](assets/structure_repoint.png "Structure Repoint")]
 
 ---
 
@@ -460,7 +504,11 @@ Structures for large courses have become "large".
 
 --
 
-* Due to some module data being stored there that don't actually need to be there.
+* Due to some module data being stored there
+
+--
+
+* (...which doesn't actually need to be there.)
 
 --
 
@@ -488,7 +536,7 @@ Externally-hosted MongoDB - compose.io
 
 --
 
-* Large structures and many structure queries have caused performance problems at peak loads.
+* Large structures and many structure queries at peak loads have caused performance problems.
 
 --
 
@@ -516,7 +564,7 @@ Split structure version storage
 
 --
 
-* As stated, structures became "large".
+* As stated before, structures became "large".
 
 --
 
@@ -543,6 +591,8 @@ DEMONSTRATE HOW TO FIX
 CONFESS THAT PLATFORM SUFFERS FROM ISSUE
 
 ---
+
+# Problems We've Encountered
 
 GridFS
 

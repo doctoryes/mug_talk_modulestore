@@ -1,0 +1,17 @@
+{
+    "_id" : ObjectId("561eebc156c02c2016f966fa"),
+    "run" : "2015_Fall",
+    "search_targets" : {
+        "wiki_slug" : "SQX.SQ103.2015_Fall"
+    },
+    "versions" : {
+        "draft-branch" : ObjectId("561eec1756c02c2016f970dd"),
+        "published-branch" : ObjectId("561eec1856c02c2016f970de")
+    },
+    "schema_version" : NumberInt(1),
+    "last_update" : ISODate("2015-10-14T23:58:20.430+0000"),
+    "course" : "SQ103",
+    "edited_on" : ISODate("2015-10-14T23:56:49.256+0000"),
+    "org" : "SQX",
+    "edited_by" : NumberLong(4)
+}

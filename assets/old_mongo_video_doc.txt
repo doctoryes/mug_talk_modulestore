@@ -1,0 +1,30 @@
+{
+    "_id" : {
+        "tag" : "i4x",
+        "org" : "edX",
+        "course" : "DemoX",
+        "category" : "video",
+        "name" : "7e9b434e6de3435ab99bd3fb25bde807",
+        "revision" : null
+    },
+    "definition" : {
+        "data" : {
+
+        }
+    },
+    "edit_info" : {
+        "edited_by" : NumberInt(-1),
+        "subtree_edited_on" : ISODate("2015-07-28T15:41:16.679+0000"),
+        "edited_on" : ISODate("2015-07-28T15:41:16.679+0000"),
+        "subtree_edited_by" : NumberInt(-1)
+    },
+    "metadata" : {
+        "download_video" : false,
+        "youtube_id_1_0" : "CCxmtcICYNc",
+        "display_name" : "Science and Cooking Chef Profile: JOSÉ ANDRÉS",
+        "sub" : "CCxmtcICYNc",
+        "html5_sources" : [
+
+        ]
+    }
+}
