@@ -9,8 +9,21 @@
     .scale30 {
       width: 30%;
     }
+    .scale80 {
+      width: 80%;
+    }
     .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; font-size: 0.5em; padding: 0.0em;}
     .remark-code-line-highlighted     { background-color: #373832; }
+    th {
+        text-align: left;
+    }
+    table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 30px;
+    }
   </style>
   <body>
 <label for="source" class="sr">Slide Deck</label>
@@ -30,11 +43,22 @@ class: title middle left
 
 
 **John Eskew**
-```
+
 Principal Software Engineer - edX
+
 Core Platform Team
-```
+
 <https://github.com/doctoryes>
+
+---
+
+# Talk Summary
+
+* Introduction to edX
+
+* edX Modulestore
+
+* Problems Encountered
 
 ---
 
@@ -51,6 +75,12 @@ Core Platform Team
 * Powered by OpenEdx
 
 * [https://university.mongodb.com/](https://university.mongodb.com/)
+
+---
+
+# The edX codebase
+
+<a href="http://github.com/edx" target="_blank">This is the edX codebase.</a>
 
 ---
 
@@ -82,49 +112,7 @@ class: center, middle
 
 --
 
-- Here's an XML course example...
-
----
-```xml
-<course name="A Simple Course" org="edX" course="simple" graceperiod="1 day 5 hours 59 minutes 59 seconds" slug="2012_Fall">
-  <chapter name="Overview">
-    <video name="Welcome" youtube_id_0_75="izygArpw-Qo" youtube_id_1_0="p2Q6BrNhdh8" youtube_id_1_25="1EeWXzPdhSA" youtube_id_1_5="rABDYkeK0x8"/>
-    <videosequence format="Lecture Sequence" name="A simple sequence">
-      <html name="toylab" filename="toylab"/>
-      <video name="S0V1: Video Resources" youtube_id_0_75="EuzkdzfR0i8" youtube_id_1_0="1bK-WdDi6Qw" youtube_id_1_25="0v1VzoDVUTM" youtube_id_1_5="Bxk_-ZJb240"/>
-    </videosequence>
-    <section name="Lecture 2">
-      <sequential>
-        <video youtube_id_1_0="TBvX7HzxexQ"/>
-        <problem name="L1 Problem 1" points="1" type="lecture" showanswer="attempted" filename="L1_Problem_1" rerandomize="never"/>
-      </sequential>
-    </section>
-  </chapter>
-  <chapter name="Chapter 2" url_name='chapter_2'>
-    <section name="Problem Set 1">
-      <sequential>
-        <problem type="lecture" showanswer="attempted" rerandomize="true" display_name="A simple coding problem" name="Simple coding problem" filename="ps01-simple" url_name="ps01-simple"/>
-      </sequential>
-    </section>
-    <video name="Lost Video" youtube_id_1_0="TBvX7HzxexQ"/>
-    <sequential format="Lecture Sequence" url_name='test_sequence'>
-      <vertical url_name='test_vertical'>
-        <html url_name='test_html'>
-          Foobar
-        </html>
-      </vertical>
-    </sequential>
-  </chapter>
-</course>
-```
----
-
-# edX History
-
-
-- First course: MIT 6.002x
-
-- Content coded in XML
+- Here's an XML course [example](assets/simple_course.xml).
 
 --
 
@@ -140,7 +128,33 @@ class: center, middle
 
 ---
 
-INSERT SLIDE ABOUT PROCESS MEM USAGE...
+# XML course problems
+
+- Until recently, edX still served all the original 41 XML courses.
+
+--
+
+- Each process loaded each XML course into memory upon startup.
+
+--
+
+- Each process consumed 745 MB of RAM.
+
+--
+
+  (edx.org runs a few hundred processes.)
+
+--
+
+- Each process took around 10 minutes from startup until servicing users.
+
+--
+
+  Why? Because loading all the XML courses took that long.
+
+--
+
+  Without loading the XML courses, startup takes only 30 seconds.
 
 ---
 
@@ -190,19 +204,19 @@ a.k.a "old Mongo Modulestore".
 
 --
 
-Stores course modules (XModules).
+* Stores course modules (XModules).
 
 --
 
-On-demand loading of course modules.
+* On-demand loading of course modules.
 
 --
 
-Single collection.
+* Single collection to hold all courses.
 
 --
 
-Each document is a course module/block.
+* Each document is a course module/block.
 
 ---
 
@@ -220,31 +234,31 @@ Let's look at some documents:
 
 --
 
-No versioning
+* No versioning
 
 --
 
-A single draft branch and a single published branch
+  A single draft branch and a single published branch
 
 --
 
-Suppose you want to publish several course blocks.
+  Suppose you want to publish several course blocks.
 
 --
 
-Those blocks are copied directly from the draft branch to the published branch.
+  Those blocks are copied directly from the draft branch to the published branch.
 
 --
 
-Non-atomic operation to live course material.
+  Non-atomic operation to live course material.
 
 --
 
-Last published course version is forever lost.
+  Last published course version is forever lost.
 
 --
 
-NON-OPTIMAL
+ROOM FOR IMPROVEMENT...
 
 ---
 
@@ -312,15 +326,15 @@ a.k.a. Split Mongo Modulestore
 
 --
 
-Optimizes for frequent course traversal
+* Optimizes for frequent course traversal
 
 --
 
-Adds versioning
+* Adds versioning
 
 --
 
-"Split"s out course structure from course content
+* "Split"s out course structure from course content
 
 ---
 
@@ -354,15 +368,27 @@ _Immutable_ once created!
 
 --
 
-An example [structure](assets/split_structure.json)
+An example [structure](assets/split_structure.json) document
 
 ---
 
 # modulestore.definitions
 
-EXAMPLE OF DEFINITIONS DOCUMENT
+--
 
-Contains the content of a course block
+Contains _only_ the content of a course block
+
+--
+
+No reference to a specific course
+
+--
+
+No reference to content's location within a course
+
+--
+
+An example [definition](assets/split_definition.txt) document
 
 ---
 
@@ -386,7 +412,7 @@ Points to course structures
 
 --
 
-An example [active_versions document](assets/split_active_versions.txt).
+An example [active_versions](assets/split_active_versions.txt) document
 
 ---
 
@@ -508,7 +534,7 @@ Structures for large courses have become "large".
 
 --
 
-* (...which doesn't actually need to be there.)
+  (...which doesn't actually need to be there.)
 
 --
 
@@ -536,21 +562,25 @@ Externally-hosted MongoDB - compose.io
 
 --
 
-* Large structures and many structure queries at peak loads have caused performance problems.
+* Large structures and many structure queries at peak loads caused performance problems.
+
+  Primarily NAT network overload.
 
 --
 
 * To fix performance issues, we pickle, compress, and cache course structures in memcache.
 
---
-
-* INSERT GRAPH OF BEFORE & AFTER CHANGE HERE
-
 ---
 
 # Problems We've Encountered
 
---
+* Graph of NAT traffic before and after that optimization was deployed.
+
+.float-center[![Before/after optimization](assets/structure_nat_usage.png "Structure NAT Usage Before/After")]
+
+---
+
+# Problems We've Encountered
 
 Split structure version storage
 
@@ -574,21 +604,155 @@ Split structure version storage
 
 * After several months, storage became an issue.
 
---
+---
 
-* QUOTE NUMBERS HERE: SIZE OF MODULESTORE DB & COMPRESSED SIZE WITH WIRED TIGER
+# Problems We've Encountered
+
+Split structure version storage
+
+* MongoDB Usage Numbers (as last month)
+
+<table>
+    <tr>
+        <th>Collection</th>
+        <th>Documents</th>
+        <th>Size</th>
+    </tr>
+    <tr>
+        <td>modulestore.active_versions</td>
+        <td>1,033</td>
+        <td>680 KB</td>
+    </tr>
+    <tr>
+        <td>modulestore.definitions</td>
+        <td>692,202</td>
+        <td>3.47 GB</td>
+    </tr>
+    <tr>
+        <td>modulestore.structures</td>
+        <td>908,948</td>
+        <td>437 GB</td>
+    </tr>
+</table>
 
 ---
 
-Concurrent edits
+# Problems We've Encountered
 
-SHOW INTERLEAVED STEPS
+Split structure version storage
 
-DEMONSTRATE PROBLEM
+* MongoDB Usage Numbers (using MongoDB 3.0 with Wired Tiger)
 
-DEMONSTRATE HOW TO FIX
+<table>
+    <tr>
+        <th>Collection</th>
+        <th>Documents</th>
+        <th>Size</th>
+        <th>Wired Tiger Size</th>
+        <th>Space Reduction</th>
+    </tr>
+    <tr>
+        <td>modulestore.active_versions</td>
+        <td>1,033</td>
+        <td>680 KB</td>
+        <td>274 KB</td>
+        <td>2.5x</td>
+    </tr>
+    <tr>
+        <td>modulestore.definitions</td>
+        <td>692,202</td>
+        <td>3.47 GB</td>
+        <td>1.1 GB</td>
+        <td>3.2x</td>
+    </tr>
+    <tr>
+        <td>modulestore.structures</td>
+        <td>908,948</td>
+        <td>437 GB</td>
+        <td>109 GB</td>
+        <td>4x</td>
+    </tr>
+</table>
 
-CONFESS THAT PLATFORM SUFFERS FROM ISSUE
+---
+
+# Problems We've Encountered
+
+Split Course Concurrent Edits
+
+--
+
+* MongoDB does not support multi-document transactions.
+
+--
+
+* Atomicity only at the single document level.
+
+--
+
+* Scenario:
+
+  Suppose multiple course authors are modifying the same course simultaneously.
+
+---
+
+# Problems We've Encountered
+
+Split Course Concurrent Edits
+
+.float-left[![Concurrent course edits](assets/concurrent_course_edit.png "Concurrent Course Edits")]
+
+---
+
+# Problems We've Encountered
+
+Split Course Concurrent Edits
+
+.float-left.scale80[![Split structure repoint example](assets/structure_repoint.png "Structure Repoint")]
+
+---
+
+# Problems We've Encountered
+
+Split Course Concurrent Edits
+
+The Fix:
+
+--
+
+* At update_course_index() time, check the current structure ID.
+
+--
+
+* Is it the same structure ID from which my edited structure was derived?
+
+--
+
+* Yes? No problem - good to go.
+
+--
+
+* No? Edit conflict has occurred!
+
+--
+
+  Ask the author whether they want to merge, abort, or overwrite.
+
+---
+
+# Problems We've Encountered
+
+Split Course Concurrent Edits
+
+The Confession:
+
+* The OpenEdx platform currently does *not* implement this fix. (sadface!)
+
+* It's possible to experience lost changes with multiple concurrent course authors.
+
+* NOTE: The changes aren't actually *lost*, just on a branch with no subsequent generations.
+
+* Perhaps YOU! would like to fix this problem. We accept Open Source Pull Requests.
 
 ---
 
@@ -596,9 +760,110 @@ CONFESS THAT PLATFORM SUFFERS FROM ISSUE
 
 GridFS
 
+--
 
+* Requirement: Binary assets can be stored & served to course students.
+
+--
+
+* Requirement: Support asset "locking" so that only course registrants can access the assets.
+
+--
+
+* Thinking: We're already using MongoDB to store courses.
+
+--
+
+  GridFS exists and can store binary data in MongoDB.
+
+--
+
+  Let's use it!
+
+--
+
+* Reasonable thoughts, right?
 
 ---
+
+# Problems We've Encountered
+
+GridFS
+
+* The Root Problem:
+
+--
+
+  The application is reading the binary data from MongoDB via GridFS.
+
+--
+
+  And streaming it to each asset requestor.
+
+---
+
+# Problems We've Encountered
+
+GridFS
+
+* Imagine this scenario:
+
+  A course deadline approaches for a course that's popular around the globe, particularly in parts of the world that have only low bandwidth Internet connections.
+
+--
+
+  A large number of students request a large course asset (let's say 100 MB) at around the same time.
+
+---
+
+# Problems We've Encountered
+
+GridFS
+
+* Imagine this scenario:
+
+  Each course asset download ties up an application worker for the entire download time.
+
+--
+
+  Less and less workers to serve other website traffic.
+
+--
+
+  RESULT: Spikes, alerts, alarming death spiral, postmortems, etc.
+
+---
+
+# Problems We've Encountered
+
+GridFS
+
+* GridFS wasn't _really_ the problem here.
+
+--
+
+* The edx-platform usage of GridFS was the real problem.
+
+--
+
+* Nonetheless, a cautionary tale...
+
+--
+
+* We plan to fix this problem by serving course assets _externally_
+
+  using an AWS S3 / CDN combo
+
+  temporary URIs for security
+
+---
+
+
+# Thanks for your time!
+
+* This talk's slides can be accessed here:
+
+
 
 </textarea>
     <script src="http://gnab.github.io/remark/downloads/remark-latest.min.js">

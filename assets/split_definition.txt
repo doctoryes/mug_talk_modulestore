@@ -1,0 +1,14 @@
+{
+    "_id" : ObjectId("55b1448256c02c26a4cec126"),
+    "fields" : {
+        "data" : "<problem>\n  <p>Imagine a method to find solutions to very complex equations. This method works by guessing a solution, checking to see how far off the solution is, and then looking for a nearby solution that is a better answer. The method \"learns\" from its old guesses to make better guesses on similar equations in the future.</p>\n  <p>How is this system similar to life? Check all the boxes that apply in this case.</p>\n  <choiceresponse>\n    <checkboxgroup label=\"How is this system similar to life? Check all the boxes that apply in this case.\" direction=\"vertical\">\n      <choice correct=\"false\">Life is based on chemistry</choice>\n      <choice correct=\"false\">Life is a system that is not in equilibrium</choice>\n      <choice correct=\"true\">Life is adaptive and self-optimizing</choice>\n      <choice correct=\"false\">Life uses cells</choice>\n      <choice correct=\"false\">Life requires water</choice>\n    </checkboxgroup>\n  </choiceresponse>\n  <solution>\n    <div class=\"detailed-solution\">\n      <p>Explanation</p>\n      <p>This is an adaptive approach, but no other attributes of life apply.</p>\n    </div>\n  </solution>\n</problem>\n"
+    },
+    "edit_info" : {
+        "edited_on" : ISODate("2015-07-23T19:46:10.254+0000"),
+        "edited_by" : NumberLong(4),
+        "original_version" : ObjectId("55b1448256c02c26a4cec126"),
+        "previous_version" : null
+    },
+    "block_type" : "problem",
+    "schema_version" : NumberInt(1)
+}
