@@ -234,6 +234,30 @@ Let's look at some documents:
 
 --
 
+* No (1st class) re-run support
+
+--
+
+  Shipped without concept of the same course re-running in multiple semesters/terms.
+
+--
+
+  Significant work to change it and migrate existing courses.
+
+--
+
+  So the work was never done.
+
+--
+
+  Course re-runs supported by using a different "course" name.
+
+---
+
+# Draft Modulestore Issues
+
+--
+
 * No versioning
 
 --
@@ -255,10 +279,6 @@ Let's look at some documents:
 --
 
   Last published course version is forever lost.
-
---
-
-ROOM FOR IMPROVEMENT...
 
 ---
 
@@ -610,7 +630,7 @@ Split structure version storage
 
 Split structure version storage
 
-* MongoDB Usage Numbers (as last month)
+* MongoDB Usage Numbers (as of last month)
 
 <table>
     <tr>
@@ -746,13 +766,25 @@ Split Course Concurrent Edits
 
 The Confession:
 
+--
+
 * The OpenEdx platform currently does *not* implement this fix. (sadface!)
+
+--
 
 * It's possible to experience lost changes with multiple concurrent course authors.
 
+--
+
 * NOTE: The changes aren't actually *lost*, just on a branch with no subsequent generations.
 
-* Perhaps YOU! would like to fix this problem. We accept Open Source Pull Requests.
+--
+
+* Perhaps YOU! would like to fix this problem.
+
+--
+
+  We accept Open Source Pull Requests!
 
 ---
 
@@ -886,7 +918,7 @@ GridFS
           // Enable or disable navigation using click
           // Default: false
           // Alternatives: true
-          click: false
+          click: true
         },
     });
     </script>
