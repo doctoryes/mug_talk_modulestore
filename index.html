@@ -38,7 +38,9 @@ class: title middle left
 
 .subtitle[Storing edX Courses in MongoDB]
 
-.thirdtitle[Boston MongoDB User Group: October 19th, 2015]
+.thirdtitle[<del>Boston MongoDB User Group: October 19th, 2015]
+
+.fourthtitle[edX Lunch 'n Learn: November 9th, 2017]
 
 ---
 
@@ -131,7 +133,9 @@ class: center
 
 An interface to create and query course content, backed by storage.
 
-The storage used by edX: MongoDB.
+The storage used by edX:
+
+.float-left[![MongoDB logo](assets/mongodb-logo.jpg "MongoDB logo")]
 
 ---
 
@@ -149,7 +153,7 @@ class: center, middle
 
 --
 
-- Content coded in XML
+- Content was coded directly into XML
 
 --
 
@@ -165,13 +169,13 @@ class: center, middle
 
 --
 
-- Works for 10s of courses - but not 100s...
+- Works fine for tens of courses - but not 100s...
 
 ---
 
 # XML course problems
 
-- Until recently, edX still served all the original 41 XML courses.
+- Up until late-2015, edX still served all the original 41 XML courses.
 
 --
 
@@ -229,6 +233,36 @@ Maybe MongoDB?
 
 ---
 
+# Aside: How does MongoDB store info?
+
+--
+
+- Documents
+
+--
+
+  Free-form JSON objects
+
+--
+
+- Collections
+
+--
+
+  Named collection of documents
+
+--
+
+  Roughly equal to an RDBMS table...
+
+--
+
+```javascript
+db.inventory.insertOne( { item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } } )
+```
+
+---
+
 ### edX Course
 
 .float-left.scale50[![Course tree diagram](assets/edx_course.png "edX Course")]
@@ -241,7 +275,7 @@ Basically a directed acyclic graph (DAG)...
 
 --
 
-a.k.a "old Mongo Modulestore".
+a.k.a "Old Mongo Modulestore".
 
 --
 
@@ -321,6 +355,10 @@ Let's look at some documents:
 
   Last published course version is forever lost.
 
+--
+
+(Hindsight is 20/20)...
+
 ---
 
 # Draft Modulestore Issues
@@ -367,7 +405,7 @@ Nearly all course modules must be queried.
 
 --
 
-Many MongoDB find queries of a small number of documents on each query.
+Many MongoDB "find()" queries of a small number of documents on each query.
 
 --
 
@@ -399,21 +437,21 @@ a.k.a. Split Mongo Modulestore
 
 ---
 
-.float-left[![Split course diagram](assets/split_course.png "Split Course")]
-
----
-
 # Split Modulestore
 
 --
 
-Three different collections
+Three different collections:
 
 --
 
 * modulestore.active_versions
 * modulestore.structures
 * modulestore.definitions
+
+---
+
+.float-left[![Split course diagram](assets/split_course.png "Split Course")]
 
 ---
 
@@ -498,6 +536,10 @@ Traverse the in-memory structure, finding all video modules.
 ---
 
 # Split Modulestore Course Editing - Details
+
+Suppose you edit a course - what happens?:
+
+--
 
 1. version_structure()
 
@@ -611,6 +653,10 @@ Structures for large courses have become "large".
 
 --
 
+An old problem first...
+
+--
+
 Externally-hosted MongoDB - compose.io
 
 --
@@ -671,7 +717,7 @@ Split structure version storage
 
 Split structure version storage
 
-* MongoDB Usage Numbers (as of last month)
+* MongoDB Usage Numbers (as of Oct 2015)
 
 <table>
     <tr>
@@ -702,7 +748,7 @@ Split structure version storage
 
 Split structure version storage
 
-* MongoDB Usage Numbers (using MongoDB 3.0 with Wired Tiger)
+* MongoDB Usage Numbers (post-upgrade: MongoDB 3.0 with Wired Tiger)
 
 <table>
     <tr>
@@ -734,6 +780,30 @@ Split structure version storage
         <td>4x</td>
     </tr>
 </table>
+
+---
+
+# Problems We've Encountered
+
+Split structure version storage
+
+* However, as of last month (Oct 2017), the structure storage size had increased somewhat...
+
+--
+
+  2 TB! (uncompressed...)
+
+--
+
+* Dave Ormsbee and Microsoft (via OSPR) created a script to delete unused structures.
+
+--
+
+* Now, structure storage is back down to:
+
+--
+
+  300 GB (uncompressed...)
 
 ---
 
@@ -807,9 +877,7 @@ Split Course Concurrent Edits
 
 The Confession:
 
---
-
-* The OpenEdx platform currently does *not* implement this fix. (sadface!)
+* The Open edX platform currently does *not* implement this fix. (sadface!)
 
 --
 
@@ -855,7 +923,7 @@ GridFS
 
 --
 
-* Reasonable thoughts, right?
+* Reasonable thoughts at a glance...
 
 ---
 
@@ -886,6 +954,10 @@ GridFS
 --
 
   A large number of students request a large course asset (let's say 100 MB) at around the same time.
+
+--
+
+  Takes around 2.5 minutes to download a 100 MB file using mobile 3G speed (~6 Mbit/s).
 
 ---
 
@@ -923,11 +995,13 @@ GridFS
 
 --
 
-* We plan to fix this problem by serving course assets _externally_
+* We have mitigated this problem somewhat by serving some course assets _externally_.
 
-  using an AWS S3 / CDN combo
+  Asset is retrieved from AWS Cloudfront - which uses LMS/GridFS as origin.
 
-  temporary URIs for security
+--
+
+  ...but for "unlocked" assets only.
 
 ---
 
