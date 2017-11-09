@@ -399,7 +399,11 @@ Algorithm:
 
 * Else: repeat.
 
---
+---
+
+# Draft Modulestore Issues
+
+"Return a list of all video modules in a course."
 
 Nearly all course modules must be queried.
 
@@ -409,7 +413,11 @@ Many MongoDB "find()" queries of a small number of documents on each query.
 
 --
 
-Sure - blocks can be cached (and they are). But adds complexity.
+Sure - blocks can be cached (and they are).
+
+--
+
+But caching adds complexity.
 
 ---
 
@@ -433,7 +441,7 @@ a.k.a. Split Mongo Modulestore
 
 --
 
-* "Split"s out course structure from course content
+* SPLITs out course structure from course content
 
 ---
 
@@ -684,6 +692,34 @@ Externally-hosted MongoDB - compose.io
 * Graph of NAT traffic before and after that optimization was deployed.
 
 .float-center[![Before/after optimization](assets/structure_nat_usage.png "Structure NAT Usage Before/After")]
+
+---
+
+# An aside: Block Structure Transformers
+
+--
+
+* Added to edx-platform last year.
+
+--
+
+* Caches course XBlocks - in a sense.
+
+--
+
+* But goes beyond caching into "pre-building" XBlocks.
+
+--
+
+* Reduces both:
+
+--
+
+  MongoDB queries
+
+--
+
+  XBlock instantiation processing time
 
 ---
 
@@ -1004,6 +1040,7 @@ GridFS
   ...but for "unlocked" assets only.
 
 ---
+
 
 
 # Thanks for your time!
